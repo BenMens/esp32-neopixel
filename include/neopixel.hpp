@@ -21,17 +21,17 @@ class Pixels {
     Pixels( gpio_num_t pin, int pixelCount, StripType stripType, 
             rmt_channel_t channel, double gamma);
 
-    void SetPixel(int index, Pixel pixel);
-    void SetPixel(int index, 
+    void setPixel(int index, Pixel pixel);
+    void setPixel(int index, 
                   uint8_t red, 
                   uint8_t green, 
                   uint8_t blue, 
                   uint8_t white);
-    void SetPixel(int index, uint32_t color);
-    Pixel GetPixel(int index);
+    void setPixel(int index, uint32_t color);
+    Pixel getPixel(int index);
 
-    void Write();
-    void Clear();
+    void write();
+    void clear();
 
   private:
     gpio_num_t pin;
@@ -49,12 +49,12 @@ class Pixels {
     int oneBitHighTime = 0;
     int oneBitLowTime = 0;
 
-    void SetupPixels();
-    void SetupPixel(int index);
-    void SetupPixelBit(int index);
-    void SetupGammaTable();
-    void SetupRmt();
-    void SetupTiming();
+    void setupPixels();
+    void setupPixel(int index);
+    void setupPixelBit(int index);
+    void setupGammaTable();
+    void setupRmt();
+    void setupTiming();
 
     uint8_t gammaTable[255];
 };

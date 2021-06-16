@@ -20,54 +20,64 @@ Pixels::Pixels( gpio_num_t pin, int pixelCount, StripType stripType,
   if (stripType == StripType::ws2812) {
     colorChannelCount = 3;
     bitCount = pixelCount * colorChannelCount * 8,
-    rmtItems = new rmt_item32_t[bitCount];
+    rmtItems = new rmt_item32_t[bitCount + 1];
+
     pixelData = new uint8_t[pixelCount * colorChannelCount];
   } else {
     ESP_LOGE(TAG, "strip type not supported");
     return;
   }
 
-  SetupTiming();
-  SetupRmt();
-  SetupPixels();
-  SetupGammaTable();
-  Write();
+  setupTiming();
+  setupRmt();
+  setupPixels();
+  setupGammaTable();
+  write();
 }
 
-void Pixels::Write() {
-  rmt_write_items(this->channel, this->rmtItems, this->bitCount, true);
+void Pixels::write() {
+  rmt_write_items(this->channel, this->rmtItems, this->bitCount + 1, true);
 }
 
-void Pixels::Clear() {
-  SetupPixels();
+void Pixels::clear() {
+  setupPixels();
 }
 
-void Pixels::SetupTiming() {
+void Pixels::setupTiming() {
   // based on 80Mhz clock freq
   if (stripType == StripType::ws2812) {
     oneBitHighTime = 56;
     oneBitLowTime = 48;
     zeroBitHighTime = 28;
     zeroBitLowTime = 64;
+
+    // Make sure that the transmission is ended
+    // with a pause to make sure that
+    // two consecutive wites do not interfere    
+    rmtItems[bitCount].duration0 = 4000;
+    rmtItems[bitCount].level0 = 0;
+    rmtItems[bitCount].duration1 = 0;
+    rmtItems[bitCount].level1 = 0;
+    
   } else {
     ESP_LOGE(TAG, "strip type not supported");
     return;
   }
 }
 
-void Pixels::SetupGammaTable() {
+void Pixels::setupGammaTable() {
   for (int i = 0; i <= 255; i++) {
     gammaTable[i] = round(pow((float)i / 255, gamma) * 255 + 0.49999);
   }
 }
 
-void Pixels::SetupPixels() {
+void Pixels::setupPixels() {
   for (int i = 0; i < pixelCount; i++) {
-    this->SetupPixel(i);
+    this->setupPixel(i);
   }	
 }
 
-void Pixels::SetupPixel(int index) {
+void Pixels::setupPixel(int index) {
   int firstByteIndex = index * colorChannelCount;
 
   for (int i = 0; i < colorChannelCount; i++) {
@@ -79,18 +89,18 @@ void Pixels::SetupPixel(int index) {
       ; i < (index + 1) * colorChannelCount * 8
       ; i++) {
 
-    SetupPixelBit(i);
+    setupPixelBit(i);
   }
 }
 
-void Pixels::SetupPixelBit(int index) {
+void Pixels::setupPixelBit(int index) {
   this->rmtItems[index].level0 = 1;
   this->rmtItems[index].level1 = 0;
   this->rmtItems[index].duration0 = zeroBitHighTime;
   this->rmtItems[index].duration1 = zeroBitLowTime;
 }
 
-void Pixels::SetupRmt() {
+void Pixels::setupRmt() {
   rmt_config_t config;
   config.rmt_mode = RMT_MODE_TX;
   config.channel = channel;
@@ -106,7 +116,7 @@ void Pixels::SetupRmt() {
   ESP_ERROR_CHECK(rmt_driver_install(config.channel, 0, 0));
 }
 
-Pixel Pixels::GetPixel(int index) {
+Pixel Pixels::getPixel(int index) {
   if (index > pixelCount || index < 0) {
     ESP_LOGE(TAG, "index out of range");
     return {.red = 0x00, .green = 0x00, .blue=0x00, .white=0x00};
@@ -127,15 +137,15 @@ Pixel Pixels::GetPixel(int index) {
   return pixel;
 }
 
-void Pixels::SetPixel(int index, Pixel pixel) {
-  SetPixel(index, pixel.red, pixel.green, pixel.blue, pixel.white);
+void Pixels::setPixel(int index, Pixel pixel) {
+  setPixel(index, pixel.red, pixel.green, pixel.blue, pixel.white);
 }
 
-void Pixels::SetPixel(int index, uint32_t color) {
-  SetPixel(index, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, 0);
+void Pixels::setPixel(int index, uint32_t color) {
+  setPixel(index, (color >> 16) & 0xff, (color >> 8) & 0xff, color & 0xff, 0);
 }
 
-void Pixels::SetPixel(int index, uint8_t red, uint8_t green, 
+void Pixels::setPixel(int index, uint8_t red, uint8_t green, 
                       uint8_t blue, uint8_t white) {
   if (index > pixelCount || index < 0) {
     ESP_LOGE(TAG, "index out of range");
