@@ -1,3 +1,5 @@
-idf_component_register(SRCS "neopixel.cpp"
-                        INCLUDE_DIRS "include"
-                        )
+idf_component_register(
+    SRCS "neopixel.cpp"
+    REQUIRES driver
+    INCLUDE_DIRS "include"
+)
