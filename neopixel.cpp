@@ -6,19 +6,30 @@
 #define TAG "NEOPIXEL"
 
 Pixels::Pixels(gpio_num_t pin, int pixelCount, StripType stripType,
-               double gamma)
-    : pixelCount(pixelCount), stripType(stripType)
+               ColorOrder colorOrder, double gamma)
+    : pixelCount(pixelCount), stripType(stripType), colorOrder(colorOrder)
 {
-    if (stripType == StripType::ws2812) {
+    if (stripType == StripType::WS2812B || stripType == StripType::WS2812F) {
         colorChannelCount = 3;
         pixelData = new uint8_t[pixelCount * colorChannelCount];
 
-        ws2812_encoder_config_t config = {
-            .pin = pin,
-            .resolution_hz = 80 * 1000 * 1000,
-        };
+        ws2812_encoder_config_t config;
+        if (stripType == StripType::WS2812B) {
+            config = {
+                .pin = pin,
+                .resolution_hz = 80 * 1000 * 1000,
+                .encoding_type = WS2812B_ENCODING,
+            };
 
-        rmt_new_ws2812_encoder(&config, &txChannel, &pixelEncoder);
+        } else {
+            config = {
+                .pin = pin,
+                .resolution_hz = 80 * 1000 * 1000,
+                .encoding_type = WS2812F_ENCODING,
+            };
+        }
+
+        rmt_ws2812_encoder(&config, &txChannel, &pixelEncoder);
     } else {
         ESP_LOGE(TAG, "strip type not supported");
         return;
@@ -38,8 +49,14 @@ void Pixels::write()
                 .eot_level = 0,
             },
     };
+
     rmt_transmit(txChannel, pixelEncoder, pixelData,
                  pixelCount * colorChannelCount, &transmit_config);
+}
+
+void Pixels::waitTillWriteCompletes()
+{
+    rmt_tx_wait_all_done(txChannel, 2000);
 }
 
 void Pixels::clear()
@@ -90,16 +107,32 @@ void Pixels::setPixel(int index, uint8_t red, uint8_t green, uint8_t blue,
 
     uint8_t *pixel = pixelData + index * colorChannelCount;
 
-    if (colorChannelCount > 0) {
-        pixel[0] = gammaTable[green];
-    }
-    if (colorChannelCount > 1) {
-        pixel[1] = gammaTable[red];
-    }
-    if (colorChannelCount > 2) {
-        pixel[2] = gammaTable[blue];
-    }
-    if (colorChannelCount > 3) {
-        pixel[3] = gammaTable[white];
+    if (colorOrder == ColorOrder::GRB) {
+        if (colorChannelCount > 0) {
+            pixel[0] = gammaTable[green];
+        }
+        if (colorChannelCount > 1) {
+            pixel[1] = gammaTable[red];
+        }
+        if (colorChannelCount > 2) {
+            pixel[2] = gammaTable[blue];
+        }
+        if (colorChannelCount > 3) {
+            pixel[3] = gammaTable[white];
+        }
+
+    } else if (colorOrder == ColorOrder::RGB) {
+        if (colorChannelCount > 0) {
+            pixel[0] = gammaTable[red];
+        }
+        if (colorChannelCount > 1) {
+            pixel[1] = gammaTable[green];
+        }
+        if (colorChannelCount > 2) {
+            pixel[2] = gammaTable[blue];
+        }
+        if (colorChannelCount > 3) {
+            pixel[3] = gammaTable[white];
+        }
     }
 }
