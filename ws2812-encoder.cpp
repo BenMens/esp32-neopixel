@@ -188,15 +188,11 @@ esp_err_t rmt_ws2812_encoder(const ws2812_encoder_config_t *config,
     ws2812_encoder->base.reset = rmt_ws2812_encoder_reset;
 
     ws2812_encoder->end_symbol = {{
-        // .duration0 = (uint16_t)(300 * config->resolution_hz / 1000000),
-        .duration0 = 1,
+        .duration0 = (uint16_t)(300 * config->resolution_hz / 1000000),
         .level0 = 0,
         .duration1 = 1,  // cannot be 0 to distinguish from end-marker
         .level1 = 0,
     }};
-
-    // gpio_pulldown_dis(config->pin);
-    gpio_pullup_en(config->pin);
 
     rmt_new_copy_encoder(&copy_encoder_config, &ws2812_encoder->copy_encoder);
 
