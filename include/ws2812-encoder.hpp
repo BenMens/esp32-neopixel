@@ -8,6 +8,7 @@
 typedef enum {
     WS2812B_ENCODING,
     WS2812F_ENCODING,
+    SK68XXMINI_ENCODING,
 } ws2812_encoding_t;
 
 typedef struct {

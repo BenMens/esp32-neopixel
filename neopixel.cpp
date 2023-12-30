@@ -1,6 +1,7 @@
 #include "neopixel.hpp"
 
 #include "esp_log.h"
+#include "esp_clk_tree.h"
 #include "math.h"
 
 #define TAG "NEOPIXEL"
@@ -9,31 +10,35 @@ Pixels::Pixels(gpio_num_t pin, int pixelCount, StripType stripType,
                ColorOrder colorOrder, double gamma)
     : pixelCount(pixelCount), stripType(stripType), colorOrder(colorOrder)
 {
-    if (stripType == StripType::WS2812B || stripType == StripType::WS2812F) {
-        colorChannelCount = 3;
-        pixelData = new uint8_t[pixelCount * colorChannelCount];
+    colorChannelCount = 3;
+    pixelData = new uint8_t[pixelCount * colorChannelCount];
+    uint32_t clockValue;
 
-        ws2812_encoder_config_t config;
-        if (stripType == StripType::WS2812B) {
-            config = {
-                .pin = pin,
-                .resolution_hz = 80 * 1000 * 1000,
-                .encoding_type = WS2812B_ENCODING,
-            };
+    esp_clk_tree_src_get_freq_hz(SOC_MOD_CLK_APB, ESP_CLK_TREE_SRC_FREQ_PRECISION_APPROX, &clockValue);
 
-        } else {
-            config = {
-                .pin = pin,
-                .resolution_hz = 80 * 1000 * 1000,
-                .encoding_type = WS2812F_ENCODING,
-            };
-        }
+    ws2812_encoder_config_t config;
+    if (stripType == StripType::WS2812B) {
+        config = {
+            .pin = pin,
+            .resolution_hz = clockValue,
+            .encoding_type = WS2812B_ENCODING,
+        };
 
-        rmt_ws2812_encoder(&config, &txChannel, &pixelEncoder);
+    } else if (stripType == StripType::SK68XXMINI) {
+        config = {
+            .pin = pin,
+            .resolution_hz = clockValue,
+            .encoding_type = SK68XXMINI_ENCODING,
+        };
     } else {
-        ESP_LOGE(TAG, "strip type not supported");
-        return;
+        config = {
+            .pin = pin,
+            .resolution_hz = clockValue,
+            .encoding_type = WS2812F_ENCODING,
+        };
     }
+
+    rmt_ws2812_encoder(&config, &txChannel, &pixelEncoder);
 
     setupPixels();
     setupGammaTable(gamma);

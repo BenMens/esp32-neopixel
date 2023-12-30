@@ -132,6 +132,26 @@ esp_err_t rmt_ws2812_encoder(const ws2812_encoder_config_t *config,
                 },
         };
 
+    } else if (config->encoding_type == SK68XXMINI_ENCODING) {
+        bytes_encoder_config = {
+            .bit0 = {{
+                .duration0 = (uint16_t)(0.32 * config->resolution_hz / 1000000),
+                .level0 = 1,
+                .duration1 = (uint16_t)(0.8 * config->resolution_hz / 1000000),
+                .level1 = 0,
+            }},
+            .bit1 = {{
+                .duration0 = (uint16_t)(0.64 * config->resolution_hz / 1000000),
+                .level0 = 1,
+                .duration1 = (uint16_t)(0.2 * config->resolution_hz / 1000000),
+                .level1 = 0,
+            }},
+            .flags =
+                {
+                    .msb_first = true,
+                },
+        };
+
     } else {
         bytes_encoder_config = {
             .bit0 = {{

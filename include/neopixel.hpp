@@ -16,7 +16,7 @@ struct Pixel {
 class Pixels
 {
    public:
-    enum class StripType { WS2812F, WS2812B };
+    enum class StripType { WS2812F, WS2812B, SK68XXMINI };
     enum class ColorOrder { RGB, GRB };
 
     Pixels(gpio_num_t pin, int pixelCount, StripType stripType,
