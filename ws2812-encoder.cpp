@@ -175,7 +175,7 @@ esp_err_t rmt_ws2812_encoder(const ws2812_encoder_config_t *config,
 
     rmt_tx_channel_config_t channelConfig = {
         .gpio_num = config->pin,
-        .clk_src = RMT_CLK_SRC_APB,
+        .clk_src = RMT_CLK_SRC_DEFAULT,
         .resolution_hz = config->resolution_hz,
         .mem_block_symbols = 128,
         .trans_queue_depth = 1,
