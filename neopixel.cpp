@@ -1,5 +1,6 @@
 #include "neopixel.hpp"
 
+#include "soc/soc.h"
 #include "esp_log.h"
 #include "esp_clk_tree.h"
 #include "math.h"
@@ -12,28 +13,26 @@ Pixels::Pixels(gpio_num_t pin, int pixelCount, StripType stripType,
 {
     colorChannelCount = 3;
     pixelData = new uint8_t[pixelCount * colorChannelCount];
-    uint32_t clockValue;
-
-    esp_clk_tree_src_get_freq_hz(SOC_MOD_CLK_APB, ESP_CLK_TREE_SRC_FREQ_PRECISION_APPROX, &clockValue);
+    
 
     ws2812_encoder_config_t config;
     if (stripType == StripType::WS2812B) {
         config = {
             .pin = pin,
-            .resolution_hz = clockValue,
+            .resolution_hz = APB_CLK_FREQ,
             .encoding_type = WS2812B_ENCODING,
         };
 
     } else if (stripType == StripType::SK68XXMINI) {
         config = {
             .pin = pin,
-            .resolution_hz = clockValue,
+            .resolution_hz = APB_CLK_FREQ,
             .encoding_type = SK68XXMINI_ENCODING,
         };
     } else {
         config = {
             .pin = pin,
-            .resolution_hz = clockValue,
+            .resolution_hz = APB_CLK_FREQ,
             .encoding_type = WS2812F_ENCODING,
         };
     }
