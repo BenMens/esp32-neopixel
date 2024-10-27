@@ -51,6 +51,7 @@ void Pixels::write()
         .flags =
             {
                 .eot_level = 0,
+                .queue_nonblocking = 0,
             },
     };
 

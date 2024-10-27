@@ -179,6 +179,7 @@ esp_err_t rmt_ws2812_encoder(const ws2812_encoder_config_t *config,
         .resolution_hz = config->resolution_hz,
         .mem_block_symbols = 128,
         .trans_queue_depth = 1,
+        .intr_priority = 0,
         .flags =
             {
                 .invert_out = false,
@@ -186,7 +187,6 @@ esp_err_t rmt_ws2812_encoder(const ws2812_encoder_config_t *config,
                 .io_loop_back = false,
                 .io_od_mode = false,
             },
-        .intr_priority = 0,
     };
 
     ws2812_encoder_t *ws2812_encoder = NULL;
